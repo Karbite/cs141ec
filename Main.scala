@@ -2,16 +2,25 @@ import scala.math._
 
 // Needs classes to hold terms
 // Sealed trait can do matching (switch) in functions with classes
-sealed trait Expr
+sealed trait Expr:
+	def order: Int
 
-case class Num(n: Int) extends Expr
-case class Var(n: String) extends Expr
-case class Add(a: Expr, b: Expr) extends Expr
-case class Sub(a: Expr, b: Expr) extends Expr
-case class Mul(a: Expr, b: Expr) extends Expr
+case class Num(n: Int) extends Expr:
+	def order = 4
+case class Var(n: String) extends Expr:
+	def order = 4
+case class Add(a: Expr, b: Expr) extends Expr:
+	def order = 0
+case class Sub(a: Expr, b: Expr) extends Expr:
+	def order = 0
+case class Mul(a: Expr, b: Expr) extends Expr:
+	def order = 1
 case class Div(a: Expr, b: Expr) extends Expr
+	def order = 1
 case class Pow(a: Expr, b: Expr) extends Expr
-case class Neg(n: Expr) extends Expr
+	def order = 2
+case class Neg(n: Expr) extends Expr:
+	def order = 3
 
 var input = ""
 var pos = 0
@@ -282,3 +291,113 @@ def partySeating(guests: List[Guest]): List[String] =
 			return getNames(result)
 
 	List()
+
+def format(e: Expr): String =
+	e match
+		case Num(n) => n.toString
+		case Var(n) => n
+		case Neg(n) =>
+			n match
+				case Num(_) | Var(_) => "-" + format(n)
+				case _ => "-(" + format(n) + ")"
+		case Add(a, b) =>
+			var left = ""
+			var right = ""
+
+			if a.order < e.order then
+				left = "(" + format(a) + ")"
+			else
+				left = format(a)
+
+			if b.order < e.order then
+				right = "(" + format(b) + ")"
+			else
+				right = format(b)
+
+			left + "+" + right
+		case Sub(a, b) =>
+			var left = ""
+			var right = ""
+
+			if a.order < e.order then
+				left = "(" + format(a) + ")"
+			else
+				left = format(a)
+
+			if b.order < e.order then
+				right = "(" + format(b) + ")"
+			else
+				right = format(b)
+
+			left + "-" + right
+		case Mul(a, b) =>
+			var left = ""
+			var right = ""
+
+			if a.order < e.order then
+				left = "(" + format(a) + ")"
+			else
+				left = format(a)
+
+			if b.order < e.order then
+				right = "(" + format(b) + ")"
+			else
+				right = format(b)
+
+			left + "*" + right
+		case Div(a, b) =>
+			var left = ""
+			var right = ""
+
+			if a.order < e.order then
+				left = "(" + format(a) + ")"
+			else
+				left = format(a)
+
+			if b.order < e.order then
+				right = "(" + format(b) + ")"
+			else
+				right = format(b)
+
+			left + "/" + right
+		case Pow(a, b) =>
+			var left = ""
+			var right = ""
+
+			if a.order < e.order then
+				left = "(" + format(a) + ")"
+			else
+				left = format(a)
+
+			if b.order < e.order then
+				right = "(" + format(b) + ")"
+			else
+				right = format(b)
+
+			left + "^" + right
+
+@main runTests(): Unit = // returns nothing
+	println(eval(parse("5-6*18/3+2")))
+	println(eval(parse("10*20-9/3+20")))
+	println(eval(parse("10^3*9-1")))
+
+	println(format(simplifyRecurse(parse("5-x*(3/3)+2"))))
+	println(format(simplifyRecurse(parse("1*x-0/3+2"))))
+
+	println(format(derivation(parse("x^2"))))
+	println(format(derivation(parse("(x*2*x)/x"))))
+	println(format(derivation(parse("x^4+2*x^3-x^2+5*x-1/x"))))
+
+	val guests = List(Guest("klefstad", false, Set("english", "spanish")),
+					  Guest("bill", false, Set("english", "spanish")),
+					  Guest("emily", true, Set("english")),
+					  Guest("heidi", true, Set("english")),
+				   	  Guest("isaac", false, Set("english", "french")),
+					  Guest("beth", true, Set("french")),
+					  Guest("mark", false, Set("french")),
+					  Guest("susan", true, Set("french", "spanish")),
+					  Guest("fred", false, Set("spanish")),
+					  Guest("jane", true, Set("spanish")))
+	println(partySeating(guests))
+
+
