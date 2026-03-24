@@ -121,3 +121,62 @@ def derivation(e: Expr): Expr =
 	val temp = simplifyRecurse(e) // Simplify first for easier derivation
 
 	simplify(deriv(temp)) // Derive and then simplify the derivation
+
+case class Guest(name: string, isFemale: Boolean, langs: Set[String])
+
+def sameLang(a: Guest, b: Guest): Boolean =
+	a.langs.exists(lang => b.langs.contains(lang))
+
+def notFemales(a: Guest, b: Guest): Boolean =
+	!(a.female && b.female)
+
+def checkUsed(g: Guest, used: List[Guest]): Boolean =
+	!used.contains(g)
+
+def getPermutations(current: List[Guest], rest: List[Guest]): List[Guest] = 
+	if rest.isEmpty then
+		if (sameLang(current.head, current.last) &&
+		    notFemales(current.head, current.last)) then
+			current
+		else
+			List()
+	else
+		var i = 0 // Needs to be mutable
+		while (i < rest.length) do
+			val temp = remaining(i)
+
+			if (sameLang(current.last, temp) &&
+				notFemales(current.last, temp)) then
+				val newCurrent = current :+ temp
+				val newRest = rest.slice(0, i) ++ rest.slice(i + 1, rest.length)
+				val result = getPermutations(newCurrent, newRest)
+
+				if result.nonEmpty then 
+					result
+
+			i += 1
+
+		List()
+
+def getNames(guests: List[Guest]): List[String] =
+	var names = List[String]()
+	var i = 0
+
+	while (i < guests.length) then
+		names = names ++ List(guests(i).name)
+		i += 1
+	
+	names
+
+def partySeating(guests: List[Guest]): List[String] =
+	var i = 0
+
+	while (i < guests.length) then
+		val start = guests(i)
+		val rest = guests.slice(0, i) ++ rest.slice(i + 1, rest.length)
+		val result = getPermutations(List(start), rest)
+
+		if result.nonEmpty then
+			getNames(result)
+
+	List()
