@@ -102,4 +102,22 @@ def simplifyRecurse(e: Expr): Expr =
 	else // Still found a simplification
 		simplify(temp)
 
+def deriv(e: Expr): Expr = 
+	e match
+		case Num(_) => Num(0)
+		case Var("x") => Num(1)
+		case Add(a, b) =>
+			Add(deriv(a), deriv(b))
+		case Sub(a, b) =>
+			Sub(deriv(a), deriv(b))
+		case Mul(a, b) => // u'v + uv'
+			Add(Mul(deriv(a), b), Mul(a, deriv(b)))
+		case Div(a, b) => // (u'v - uv') / v^2
+			Div(Sub(Mul(deriv(a), b), Mul(a, deriv(b))), Pow(b, Num(2)))
+		case Pow(x, Num(b)) => // ax^b -> a * b * derivation of x * x^(b-1)
+			Mul(Num(b), Mul(deriv(x), Pow(x, Num(b - 1))))
 
+def derivation(e: Expr): Expr =
+	val temp = simplifyRecurse(e) // Simplify first for easier derivation
+
+	simplify(deriv(temp)) // Derive and then simplify the derivation
