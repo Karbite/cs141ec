@@ -21,7 +21,7 @@ return the right evaluation.
 def eval(e: Expr): Int = 
 	e match
 		case Num(n) => n
-		case Var(n) => println("Eval var not allowed")
+		case Var(n) => throw new RuntimeException("Eval var not allowed")
 		case Add(a, b) => eval(a) + eval(b)
 		case Sub(a, b) => eval(a) - eval(b)
 		case Mul(a, b) => eval(a) * eval(b)
@@ -50,7 +50,7 @@ def simplify(e: Expr): Expr =
 				case (Num(x), Num(y)) => Num(x + y)
 				case (x, y) => Add(x, y)
 		case Sub(a, b) =>
-			(simplify(a), simplify(b) match
+			(simplify(a), simplify(b)) match
 				case (x, Num(0)) => x
 				case (Num(0), y) => y
 				case (Num(x), Num(y)) => Num(x - y)
@@ -62,7 +62,7 @@ def simplify(e: Expr): Expr =
 			(simplify(a), simplify(b)) match
 				case (Num(0), _) => Num(0)
 				case (_, Num(0)) => Num(0)
-				case (Num(x), Num(x)) => Num(x * y)
+				case (Num(x), Num(y)) => Num(x * y)
 				case (Num(1), y) => y
 				case (x, Num(1)) => x
 				case (Num(-1), y) => Neg(y)
@@ -71,14 +71,14 @@ def simplify(e: Expr): Expr =
 		case Div(a, b) =>
 			(simplify(a), simplify(b)) match
 				case (Num(0), _) => Num(0)
-				case (_, Num(0)) => println("Not possible dividing by 0")
+				case (_, Num(0)) => throw new RuntimeException("Not possible dividing by 0")
 				case (Num(x), Num(y)) => Num(x / y)
 				case (x, Num(1)) => x
 				case (Neg(x), y) => Neg(Div(x, y))
 				case (x, Neg(y)) => Neg(Div(x, y))
 				case (x, y) =>
 					if same(x, y) then Num(1)
-					else Neg(x, y)
+					else Div(x, y)
 		case Pow(a, b) =>
 			(simplify(a), simplify(b)) match
 				case (_, Num(0)) => Num(1)
@@ -122,16 +122,13 @@ def derivation(e: Expr): Expr =
 
 	simplify(deriv(temp)) // Derive and then simplify the derivation
 
-case class Guest(name: string, isFemale: Boolean, langs: Set[String])
+case class Guest(name: String, isFemale: Boolean, langs: Set[String])
 
 def sameLang(a: Guest, b: Guest): Boolean =
 	a.langs.exists(lang => b.langs.contains(lang))
 
 def notFemales(a: Guest, b: Guest): Boolean =
-	!(a.female && b.female)
-
-def checkUsed(g: Guest, used: List[Guest]): Boolean =
-	!used.contains(g)
+	!(a.isFemale && b.isFemale)
 
 def getPermutations(current: List[Guest], rest: List[Guest]): List[Guest] = 
 	if rest.isEmpty then
@@ -152,7 +149,7 @@ def getPermutations(current: List[Guest], rest: List[Guest]): List[Guest] =
 				val result = getPermutations(newCurrent, newRest)
 
 				if result.nonEmpty then 
-					result
+					return result
 
 			i += 1
 
@@ -162,7 +159,7 @@ def getNames(guests: List[Guest]): List[String] =
 	var names = List[String]()
 	var i = 0
 
-	while (i < guests.length) then
+	while (i < guests.length) do
 		names = names ++ List(guests(i).name)
 		i += 1
 	
@@ -173,10 +170,10 @@ def partySeating(guests: List[Guest]): List[String] =
 
 	while (i < guests.length) then
 		val start = guests(i)
-		val rest = guests.slice(0, i) ++ rest.slice(i + 1, rest.length)
+		val rest = guests.slice(0, i) ++ guests.slice(i + 1, rest.length)
 		val result = getPermutations(List(start), rest)
 
 		if result.nonEmpty then
-			getNames(result)
+			return getNames(result)
 
 	List()
