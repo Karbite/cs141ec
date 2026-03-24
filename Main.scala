@@ -148,7 +148,7 @@ def same(a: Expr, b: Expr): Boolean =
 /*
 Simplify will just simplify the expression one time by
 recursing through all the classes. It will do depth first
-search with the first term and backtrack to get the 
+search with the first term and backtrack to get the
 simplifications.
 */
 def simplify(e: Expr): Expr =
@@ -186,6 +186,11 @@ def simplify(e: Expr): Expr =
         case (_, Num(0)) => throw new RuntimeException("Not possible dividing by 0")
         case (Num(x), Num(y)) => Num(x / y)
         case (x, Num(1)) => x
+        case (Mul(x, y), z) if same(x, z) => y
+        case (Mul(x, y), z) if same(y, z) => x
+        case (Mul(Num(x), y), Num(z)) if x == z => y
+        case (x, Mul(y, z)) if same (x, y) => Div(Num(1), z)
+        case (Mul(Num(x), y), Num(z)) if x % z == 0 => Mul(Num(x / z), y)
         case (Neg(x), y) => Neg(Div(x, y))
         case (x, Neg(y)) => Neg(Div(x, y))
         case (x, y) =>
@@ -252,12 +257,12 @@ def integ(e: Expr): Expr =
     case Mul(Num(x), y) =>
       Mul(Num(x), integ(y))
     case Mul(x, Num(y)) =>
-      Mul(Num(y), x)
+      Mul(Num(y), integ(x))
     case Pow(Var("x"), Num(y)) =>
       if y == -1 then
         throw new RuntimeException("-1 power integral is not accepted")
       else
-        Div(Pow(Num(y + 1), Var("x")), Num(y + 1))
+        Div(Pow(Var("x"), Num(y + 1)), Num(y + 1))
 
 def integration(e: Expr): Expr =
   simplifyRecurse(integ(simplifyRecurse(e)))
@@ -416,7 +421,6 @@ def format(e: Expr): String =
 
   println(format(integration(parse("5x"))))
   println(format(integration(parse("x^2"))))
-  println(format(integration(parse("4*x^3+6*x^2-2*x+5"))))
 
   val guests = List(Guest("klefstad", false, Set("english", "spanish")),
     Guest("bill", false, Set("english", "spanish")),
