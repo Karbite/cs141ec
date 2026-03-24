@@ -52,7 +52,7 @@ def simplify(e: Expr): Expr =
 		case Sub(a, b) =>
 			(simplify(a), simplify(b)) match
 				case (x, Num(0)) => x
-				case (Num(0), y) => y
+				case (Num(0), y) => Neg(y)
 				case (Num(x), Num(y)) => Num(x - y)
 				case (x, Neg(y)) => Add(x, y)
 				case (x, y) =>
@@ -100,12 +100,14 @@ def simplifyRecurse(e: Expr): Expr =
 	if temp == e then // Expression is the same due to no more simplifications
 		e
 	else // Still found a simplification
-		simplify(temp)
+		simplifyRecurse(temp)
 
 def deriv(e: Expr): Expr = 
 	e match
 		case Num(_) => Num(0)
 		case Var("x") => Num(1)
+		case Var(_) => Num(0)
+		case Neg(x) => Neg(deriv(x))
 		case Add(a, b) =>
 			Add(deriv(a), deriv(b))
 		case Sub(a, b) =>
@@ -140,11 +142,11 @@ def getPermutations(current: List[Guest], rest: List[Guest]): List[Guest] =
 	else
 		var i = 0 // Needs to be mutable
 		while (i < rest.length) do
-			val temp = remaining(i)
+			val temp = rest(i)
 
 			if (sameLang(current.last, temp) &&
 				notFemales(current.last, temp)) then
-				val newCurrent = current :+ temp
+				val newCurrent = current ++ List(temp)
 				val newRest = rest.slice(0, i) ++ rest.slice(i + 1, rest.length)
 				val result = getPermutations(newCurrent, newRest)
 
@@ -168,9 +170,9 @@ def getNames(guests: List[Guest]): List[String] =
 def partySeating(guests: List[Guest]): List[String] =
 	var i = 0
 
-	while (i < guests.length) then
+	while (i < guests.length) do
 		val start = guests(i)
-		val rest = guests.slice(0, i) ++ guests.slice(i + 1, rest.length)
+		val rest = guests.slice(0, i) ++ guests.slice(i + 1, guests.length)
 		val result = getPermutations(List(start), rest)
 
 		if result.nonEmpty then
