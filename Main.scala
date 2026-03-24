@@ -237,6 +237,31 @@ def derivation(e: Expr): Expr =
 
   simplifyRecurse(deriv(temp)) // Derive and then simplify the derivation
 
+def integ(e: Expr): Expr =
+  e match
+    case Num(n) =>
+      Mul(Num(n), Var("x"))
+    case Var("x") =>
+      Div(Pow(Var("x"), Num(2)), Num(2))
+    case Neg(n) =>
+      Neg(integ(n))
+    case Add(a, b) =>
+      Add(integ(a), integ(b))
+    case Sub(a, b) =>
+      Sub(integ(a), integ(b))
+    case Mul(Num(x), y) =>
+      Mul(Num(x), integ(y))
+    case Mul(x, Num(y)) =>
+      Mul(Num(y), x)
+    case Pow(Var("x"), Num(y)) =>
+      if y == -1 then
+        throw new RuntimeException("-1 power integral is not accepted")
+      else
+        Div(Pow(Num(y + 1), Var("x")), Num(y + 1))
+
+def integration(e: Expr): Expr =
+  simplifyRecurse(integ(simplifyRecurse(e)))
+
 case class Guest(name: String, isFemale: Boolean, langs: Set[String])
 
 def sameLang(a: Guest, b: Guest): Boolean =
@@ -388,6 +413,10 @@ def format(e: Expr): String =
   println(format(derivation(parse("x^2"))))
   println(format(derivation(parse("(x*2*x)/x"))))
   println(format(derivation(parse("x^4+2*x^3-x^2+5*x-1/x"))))
+
+  println(format(integration(parse("5x"))))
+  println(format(integration(parse("x^2"))))
+  println(format(integration(parse("4*x^3+6*x^2-2*x+5"))))
 
   val guests = List(Guest("klefstad", false, Set("english", "spanish")),
     Guest("bill", false, Set("english", "spanish")),
