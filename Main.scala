@@ -13,6 +13,108 @@ case class Div(a: Expr, b: Expr) extends Expr
 case class Pow(a: Expr, b: Expr) extends Expr
 case class Neg(n: Expr) extends Expr
 
+var input = ""
+var pos = 0
+
+/*
+Parsing order should go from (+, -) to (*, /) to pow then to unary
+to (numbers, variables, paren)
+*/
+def parse(s: String): Expr =
+	input = input.replaceAll("\\s+", "")
+	parse1() // Needs to go from lowest to highest precedence
+
+def parse1(): Expr = // Does + and - first
+	val left = parse2() // Needs to get left first
+	var result = left
+
+	while pos < input.length && (input(pos) == '+' || input(pos) == '-') do
+		val term = input(pos) // Get + or - term
+		pos += 1
+		val right = parseTerm()
+
+		if term == '+' then
+			result = Add(left, right)
+		else
+			result = Sub(left, right)
+
+	result
+
+def parse2(): Expr = // Does * and /
+	val left = parse3()
+	var result = left
+
+	while pos < input.length && (input(pos) == '*' || input(pos) == '/') do
+		val term = input(pos)
+		pos += 1
+		val right = parse3()
+
+		if term == '*' then
+			result = Mul(left, right)
+		then
+			result = Div(left, right)
+
+	result
+
+def parse3(): Expr = // Does pow
+	val left = parse4()
+	var result = left
+
+	while pos < input.length && input(pos) == '^' then 
+		// val term = input(pos) 	Not needed, already know
+		pos += 1
+		val right = parsePower()
+		result = Pow(left, right)
+	
+	result
+
+def parse4(): Expr = // Does unary
+	while pos < input.length && input(pos) == '-' then
+		pos += 1
+		Neg(parse4())
+	
+	parse5()
+
+def parseNum(): Expr =
+	val start = pos
+
+	while pos < input.length && input(pos).isDigit do
+		pos += 1
+	
+	Num(input.substring(start, pos).toInt) // Use substring to get full num
+
+def parseVar(): Expr =
+	val start = pos
+
+	while pos < input.length && input(pos).isLetter do
+		pos += 1
+	
+	Var(input.substring(start, pos))
+
+def parse5(): Expr = // Does num, var, and paren
+	if pos >= input.length then
+		throw new RuntimeException("Out of bounds")
+	
+	val temp = input(pos)
+
+	if temp.isDigit then
+		parseNum()
+	else if temp.isLetter then
+		parseVar()
+	else if temp == '(' then
+		pos += 1
+
+		val insideExpr = parse1() // Go back to beginning
+		// Pos will be incremented in call so need to check if
+		// there is an ending parentheses using pos
+		if pos >= input.length || input(pos) == ')' then
+			throw new RuntimeException("No ending )")
+
+		pos += 1
+		insideExpr
+	else
+		throw new RuntimeException("Input is not accepted")
+
 /*
 Eval will take in an Expr called n and return an int. It will use
 match (switch) statements to go through what n is a class of and
@@ -118,11 +220,12 @@ def deriv(e: Expr): Expr =
 			Div(Sub(Mul(deriv(a), b), Mul(a, deriv(b))), Pow(b, Num(2)))
 		case Pow(x, Num(b)) => // ax^b -> a * b * derivation of x * x^(b-1)
 			Mul(Num(b), Mul(deriv(x), Pow(x, Num(b - 1))))
+		case Pow(_, _) => throw new RuntimeException("Only constant exponents")
 
 def derivation(e: Expr): Expr =
 	val temp = simplifyRecurse(e) // Simplify first for easier derivation
 
-	simplify(deriv(temp)) // Derive and then simplify the derivation
+	simplifyRecurse(deriv(temp)) // Derive and then simplify the derivation
 
 case class Guest(name: String, isFemale: Boolean, langs: Set[String])
 
