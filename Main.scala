@@ -408,20 +408,25 @@ def format(e: Expr): String =
       left + "^" + right
 
 @main def runTests(): Unit = // returns nothing
+  println("Eval")
   println(eval(parse("5-6*18/3+2")))
   println(eval(parse("10*20-9/3+20")))
   println(eval(parse("10^3*9-1")))
 
+  println("Simplify")
   println(format(simplifyRecurse(parse("5-x*(3/3)+2"))))
   println(format(simplifyRecurse(parse("1*x-0/3+2"))))
 
+  println("Derive")
   println(format(derivation(parse("x^2"))))
   println(format(derivation(parse("(x*2*x)/x"))))
   println(format(derivation(parse("x^4+2*x^3-x^2+5*x-1/x"))))
 
+  println("Integrate")
   println(format(integration(parse("5x"))))
   println(format(integration(parse("x^2"))))
 
+  println("Party Seating")
   val guests = List(Guest("klefstad", false, Set("english", "spanish")),
     Guest("bill", false, Set("english", "spanish")),
     Guest("emily", true, Set("english")),
