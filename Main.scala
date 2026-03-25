@@ -421,6 +421,8 @@ def format(e: Expr): String =
   println(format(derivation(parse("x^2"))))
   println(format(derivation(parse("(x*2*x)/x"))))
   println(format(derivation(parse("x^4+2*x^3-x^2+5*x-1/x"))))
+  println(format(derivation(parse("4*x^3+6*x^2-2*x+5+1/x^2"))))
+  println(format(derivation(parse("12*x^2+12*x-2-2/x^3"))))
 
   println("Integrate")
   println(format(integration(parse("5x"))))
